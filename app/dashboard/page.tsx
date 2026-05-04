@@ -29,6 +29,21 @@ export default async function DashboardPage() {
     0,
   );
 
+  const inStockCount = allProducts.filter((p) => Number(p.quantity) > 5).length;
+  const lowStockCount = allProducts.filter(
+    (p) => Number(p.quantity) <= 5 && Number(p.quantity) >= 1,
+  ).length;
+  const outOfStockCount = allProducts.filter(
+    (p) => Number(p.quantity) === 0,
+  ).length;
+
+  const inStockPercentage =
+    totalProducts > 0 ? Math.round((inStockCount / totalProducts) * 100) : 0;
+  const lowStockPercentage =
+    totalProducts > 0 ? Math.round((lowStockCount / totalProducts) * 100) : 0;
+  const outOfStockPercentage =
+    totalProducts > 0 ? Math.round((outOfStockCount / totalProducts) * 100) : 0;
+
   const now = new Date();
   const weeklyProductsData = [];
 
@@ -184,6 +199,53 @@ export default async function DashboardPage() {
                   </div>
                 );
               })}
+            </div>
+          </div>
+          {/* Efficiency Card */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Efficiency
+              </h2>
+            </div>
+
+            {/* Circle Chart - Centered */}
+            <div className="flex justify-center mb-6">
+              <div className="relative w-48 h-48">
+                <div className="absolute inset-0 rounded-full border-8 border-gray-100">
+                  <div
+                    className="absolute inset-0 rounded-full border-8 border-purple-600"
+                    style={{
+                      maskImage: `conic-gradient(black ${inStockPercentage}%, transparent 0)`,
+                      WebkitMaskImage: `conic-gradient(black ${inStockPercentage}%, transparent 0)`,
+                    }}
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-gray-900">
+                        {inStockPercentage}%
+                      </div>
+                      <div className="text-sm text-gray-600">In Stock</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Legend - Bottom Left */}
+            <div className="mt-6 space-y-2">
+              <div className="flex items-center space-x-2 text-sm text-gray-600">
+                <div className="w-3 h-3 rounded-full bg-purple-600" />
+                <span>In Stock {inStockPercentage}%</span>
+              </div>
+              <div className="flex items-center space-x-2 text-sm text-gray-600">
+                <div className="w-3 h-3 rounded-full bg-purple-300" />
+                <span>Low Stock {lowStockPercentage}%</span>
+              </div>
+              <div className="flex items-center space-x-2 text-sm text-gray-600">
+                <div className="w-3 h-3 rounded-full bg-gray-200" />
+                <span>Out of Stock {outOfStockPercentage}%</span>
+              </div>
             </div>
           </div>
         </div>
