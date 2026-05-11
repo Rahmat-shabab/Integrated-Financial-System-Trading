@@ -1,9 +1,9 @@
 import Sidebar from "@/components/sidebar";
+import AccountSettingsPanel from "@/components/account-settings-panel";
 import { getCurrentUser } from "@/lib/auth";
-import { AccountSettings } from "@stackframe/stack";
 
 export default async function SettingsPage() {
-  const user = await getCurrentUser();
+  await getCurrentUser();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -22,7 +22,7 @@ export default async function SettingsPage() {
         </div>
         <div className="max-w-6xl">
           <div className="bg-white rounded-lg border-gray-200 p-6">
-            <AccountSettings fullPage />
+            <AccountSettingsPanel />
           </div>
         </div>
       </main>

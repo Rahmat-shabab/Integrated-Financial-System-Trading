@@ -8,21 +8,23 @@ export default async function DashboardPage() {
   const user = await getCurrentUser();
   const userId = user.id;
 
-  const [totalProducts, lowStock, allProducts] = await Promise.all([
-    prisma.product.count({ where: { userId } }),
-    prisma.product.count({
-      where: {
-        userId,
-        lowStockAt: { not: null },
-        quantity: { lte: 5 },
-      },
-    }),
+  const allProducts = await prisma.product.findMany({
+    where: { userId },
+    select: {
+      id: true,
+      name: true,
+      price: true,
+      quantity: true,
+      lowStockAt: true,
+      createdAt: true,
+    },
+    orderBy: { createdAt: "desc" },
+  });
 
-    prisma.product.findMany({
-      where: { userId },
-      select: { price: true, quantity: true, createdAt: true },
-    }),
-  ]);
+  const totalProducts = allProducts.length;
+  const lowStock = allProducts.filter(
+    (product) => product.lowStockAt !== null && product.quantity <= 5,
+  ).length;
 
   const totalValue = allProducts.reduce(
     (sum, product) => sum + Number(product.price) * Number(product.quantity),
@@ -68,13 +70,7 @@ export default async function DashboardPage() {
     });
   }
 
-  const recent = await prisma.product.findMany({
-    where: { userId },
-    orderBy: { createdAt: "desc" },
-    take: 5,
-  });
-
-  console.log(totalValue);
+  const recent = allProducts.slice(0, 5);
 
   return (
     <div className="min-h-screen bg-gray-50">

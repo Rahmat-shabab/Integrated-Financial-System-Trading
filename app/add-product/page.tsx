@@ -4,7 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import Link from "next/link";
 
 export default async function AddProductPage() {
-  const user = await getCurrentUser();
+  await getCurrentUser();
 
   return (
     <div className="min-h-screen bg-gray-50">

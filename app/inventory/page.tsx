@@ -3,6 +3,17 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { deleteProduct } from "@/lib/actions/products";
 import Pagination from "@/components/pagination";
+import { Prisma } from "@prisma/client";
+
+type InventoryProductRow = {
+  id: string;
+  name: string;
+  sku: string | null;
+  price: Prisma.Decimal;
+  quantity: number;
+  lowStockAt: number | null;
+  totalCount: number | bigint;
+};
 
 export default async function InventoryPage({
   searchParams,
@@ -14,25 +25,31 @@ export default async function InventoryPage({
   const params = await searchParams;
   const q = (params.q ?? "").trim();
 
-  const page = Math.max(1, Number(params.page ?? 1));
+  const requestedPage = Number(params.page ?? 1);
+  const page = Number.isFinite(requestedPage) ? Math.max(1, requestedPage) : 1;
   const pageSize = 10;
 
-  const where = {
-    userId,
-    ...(q ? { name: { contains: q, mode: "insensitive" as const } } : {}),
-  };
+  const searchFilter = q
+    ? Prisma.sql`AND "name" ILIKE ${`%${q}%`}`
+    : Prisma.empty;
 
-  const [totalCount, items] = await Promise.all([
-    prisma.product.count({
-      where,
-    }),
-    prisma.product.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      skip: (page - 1) * pageSize,
-      take: pageSize,
-    }),
-  ]);
+  const items = await prisma.$queryRaw<InventoryProductRow[]>`
+    SELECT
+      "id",
+      "name",
+      "sku",
+      "price",
+      "quantity",
+      "lowStockAt",
+      COUNT(*) OVER() AS "totalCount"
+    FROM "Product"
+    WHERE "userId" = ${userId} ${searchFilter}
+    ORDER BY "createdAt" DESC
+    LIMIT ${pageSize}
+    OFFSET ${(page - 1) * pageSize}
+  `;
+
+  const totalCount = items.length > 0 ? Number(items[0].totalCount) : 0;
 
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
@@ -92,11 +109,8 @@ export default async function InventoryPage({
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {items.map((product, key) => (
-                  <tr key={key} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm text-gray-500">
-                      {product.name}
-                    </td>
+                {items.map((product) => (
+                  <tr key={product.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 text-sm text-gray-500">
                       {product.name}
                     </td>
@@ -114,9 +128,7 @@ export default async function InventoryPage({
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">
                       <form
-                        action={async (formData: FormData) => {
-                          await deleteProduct(formData);
-                        }}
+                        action={deleteProduct}
                       >
                         <input type="hidden" name="id" value={product.id} />
                         <button className="text-red-600 hover:text-red-900">

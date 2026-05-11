@@ -16,7 +16,6 @@ interface ChartData {
 }
 
 export default function ProductChart({ data }: { data: ChartData[] }) {
-  console.log(data);
   return (
     <div className="h-48 w-full">
       <ResponsiveContainer width="100%" height="100%">
@@ -25,6 +24,7 @@ export default function ProductChart({ data }: { data: ChartData[] }) {
           margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+          <Tooltip />
           <XAxis
             dataKey="week"
             stroke="#666"

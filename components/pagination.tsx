@@ -17,7 +17,11 @@ export default function Pagination({
   if (totalPages <= 1) return null;
 
   const getPageUrl = (page: number) => {
-    const params = new URLSearchParams({ ...searchParams, page: String(page) });
+    const safePage = Math.min(Math.max(page, 1), totalPages);
+    const params = new URLSearchParams({
+      ...searchParams,
+      page: String(safePage),
+    });
     return `${baseUrl}?${params.toString()}`;
   };
 
